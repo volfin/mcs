@@ -136,9 +136,12 @@ namespace MCS.CORESERVICES
         }
         */
 
-
         [NonSerialized]
         private bool isAwake = false;
+		
+		[NonSerialized]
+        private bool _duplicated = false;
+		
         /// <summary>
         /// Monobehaviour Awake method.
         /// </summary>
@@ -180,22 +183,19 @@ namespace MCS.CORESERVICES
 
             for (int i = 0; i < coreMeshes.Length; i++)
             {
-                if (coreMeshes[i].meshType != MESH_TYPE.BODY)
+                if (coreMeshes[i].meshType == MESH_TYPE.BODY)
                 {
-                    continue;
-                }
+                    SkinnedMeshRenderer smr = coreMeshes[i].gameObject.GetComponent<SkinnedMeshRenderer>();
 
-                SkinnedMeshRenderer smr = coreMeshes[i].gameObject.GetComponent<SkinnedMeshRenderer>();
-                if (smr == null)
-                {
-                    continue;
-                }
+                    if (smr != null)
+                    {
+                        Material[] materials = smr.sharedMaterials;
 
-                Material[] materials = smr.sharedMaterials;
-
-                for (int j = 0; j < materials.Length; j++)
-                {
-                    allMats.Add(materials[j]);
+                        for (int j = 0; j < materials.Length; j++)
+                        {
+                            allMats.Add(materials[j]);
+                        }
+                    }
                 }
             }
 
@@ -272,9 +272,6 @@ namespace MCS.CORESERVICES
             return smr.GetInstanceID();
         }
 
-        [NonSerialized]
-        private bool _duplicated = false;
-
         /// <summary>
         /// Frees resources associated with duplicated Materials that this AlphaInjectionManager is using.
         /// </summary>
@@ -312,7 +309,7 @@ namespace MCS.CORESERVICES
 
             SkinnedMeshRenderer renderer = figure.GetSkinnedMeshRenderer();
             Material[] materials = figure.GetSkinnedMeshRenderer().sharedMaterials;
-
+			CIbody cibody = (CIbody)figure;
             int id = GetKeyFromSMR(renderer);
 
             bool hadErrors = false;
@@ -327,7 +324,7 @@ namespace MCS.CORESERVICES
 
                         //can we recover this material from our backups?
 
-                        int offset = -1;
+                        int offset;
 
                         float lod = figure.currentLODlevel;
 
@@ -359,12 +356,35 @@ namespace MCS.CORESERVICES
 
                         if (originalMaterialReferences.Length - 1 >= slot)
                         {
-                            if (originalMaterialReferences[slot] != null) { 
-                                UnityEngine.Debug.Log("Unable to recover instanced material, using original mat instead: " + originalMaterialReferences[slot].name + " slot: " + slot + " i: " + i);
-                                materials[i] = new Material(originalMaterialReferences[slot]);
-                                hadErrors = true;
-                                continue;
-                            } else
+                            if (originalMaterialReferences[slot] != null) 
+							{ 
+                               if (cibody != null)
+                                {                                   
+                                    if (cibody.headMat != null && originalMaterialReferences[slot].name.ToLower().Contains("head"))
+                                    {
+                                        materials[i] = new Material(cibody.headMat);
+                                        continue;
+                                    }
+                                    if (cibody.bodyMat != null && originalMaterialReferences[slot].name.ToLower().Contains("body"))
+                                    {
+                                        materials[i] = new Material(cibody.bodyMat);
+                                        continue;
+                                    }
+                                    if (cibody.eyeMat != null && originalMaterialReferences[slot].name.ToLower().Contains("eyeandlash"))
+                                    {
+                                        materials[i] = new Material(cibody.eyeMat);
+                                        continue;
+                                    }
+                                }
+                                else
+                                {
+                                    UnityEngine.Debug.Log("Unable to recover instanced material, using original mat instead: " + originalMaterialReferences[slot].name + " slot: " + slot + " i: " + i);
+                                    materials[i] = new Material(originalMaterialReferences[slot]);
+                                    hadErrors = true;
+                                    continue;
+                                }
+                            } 
+							else
                             {
                                 UnityEngine.Debug.LogWarning("Unable to locate suitable replacement material, consider replacing all figure skinned mesh renderer materials with non instanced versions then calling ForceCurrentMaterialsIntoOriginals");
                             }
@@ -425,22 +445,21 @@ namespace MCS.CORESERVICES
                 //	imagesToDraw.Add (ci.alphaMask);
 
                 var matEnum = ci.alphaMasks.GetEnumerator();
-                while (matEnum.MoveNext()) {
-                    MATERIAL_SLOT slot = matEnum.Current.Key;
-					if (!subAlphaTextures.ContainsKey (slot)) {
-						subAlphaTextures [slot] = new Dictionary<Texture2D,Texture2D> ();
-					}
+				foreach (KeyValuePair<MATERIAL_SLOT, Texture2D> keyValuePair in ci.alphaMasks)
+                {
+                    MATERIAL_SLOT key = keyValuePair.Key;
 
-                    Texture2D tex = ci.alphaMasks[slot];
-                    if(tex == null)
+                    if (!subAlphaTextures.ContainsKey(key))
                     {
-                        continue;
+                        subAlphaTextures[key] = new Dictionary<Texture2D, Texture2D>();
                     }
 
-                    //subAlphaTextures [slot].Add (ci.alphaMasks [slot],ci.alphaMasks [slot]);
-
-                    subAlphaTextures[slot][tex] = tex;
-				}
+                    Texture2D tex = ci.alphaMasks[key];
+                    if (tex != null)
+                    {
+                        subAlphaTextures[key][tex] = tex;
+                    }
+                }
 			}
 
 		}
@@ -553,7 +572,6 @@ namespace MCS.CORESERVICES
                     subAlphaTextures[slot].Values.CopyTo(masks, 0);
                 }
 
-                RenderTexture rt = null;
                 Texture2D tex = null;
 
                 if (masks != null && masks.Length>0)
@@ -571,7 +589,7 @@ namespace MCS.CORESERVICES
 
                             break;
                         case TEXTURE_MODE.FASTEST:
-                            rt = TextureUtilities.OverlayArrayOfTexturesGPU(masks);
+                            RenderTexture rt = TextureUtilities.OverlayArrayOfTexturesGPU(masks);
                             //rt = TextureUtilities.OverlayArrayOfTexturesGPU(masks, "Unlit/AlphaCombiner", true);
                             temporaryRenderTextures[i] = rt;
                             //UnityEngine.Debug.Log("Assigning rt: " + smr.name + " | " + slot);

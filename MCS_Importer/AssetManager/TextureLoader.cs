@@ -143,9 +143,9 @@ public static class TextureLoader
             else
             {
                 TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(assetPath);
-                if (importer.textureType != TextureImporterType.Bump)
+				if (importer.textureType != TextureImporterType.NormalMap)
                 {
-                    importer.textureType = TextureImporterType.Bump;
+                    importer.textureType = TextureImporterType.NormalMap;
                     AssetDatabase.ImportAsset(assetPath);
                     AssetDatabase.Refresh();
                 }
@@ -172,9 +172,9 @@ public static class TextureLoader
             else
             {
                 TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(assetPath);
-                if (importer.textureType != TextureImporterType.Bump)
+				if (importer.textureType != TextureImporterType.NormalMap)
                 {
-                    importer.textureType = TextureImporterType.Bump;
+                    importer.textureType = TextureImporterType.NormalMap;
                     AssetDatabase.ImportAsset(schematic.structure_and_physics.material_structure.detail_normal);
                     AssetDatabase.Refresh();
                 }
@@ -252,8 +252,8 @@ public static class TextureLoader
 		Texture2D normal = (Texture2D)AssetDatabase.LoadAssetAtPath (Paths.ConvertRelativeToAbsolute(basePath, schematic.structure_and_physics.material_structure.normal), typeof(Texture2D));
 		if (normal != null) {
 			TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath (Paths.ConvertRelativeToAbsolute(basePath, schematic.structure_and_physics.material_structure.normal));
-			if (importer.textureType != TextureImporterType.Bump) {
-				importer.textureType = TextureImporterType.Bump;
+			if (importer.textureType != TextureImporterType.NormalMap) {
+				importer.textureType = TextureImporterType.NormalMap;
 				AssetDatabase.ImportAsset (schematic.structure_and_physics.material_structure.normal);
 				AssetDatabase.Refresh ();
 			}
@@ -263,8 +263,8 @@ public static class TextureLoader
 		Texture2D detail_normal = (Texture2D)AssetDatabase.LoadAssetAtPath (Paths.ConvertRelativeToAbsolute(basePath, schematic.structure_and_physics.material_structure.detail_normal), typeof(Texture2D));
 		if (detail_normal != null) {
 			TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath (Paths.ConvertRelativeToAbsolute(basePath, schematic.structure_and_physics.material_structure.detail_normal));
-			if (importer.textureType != TextureImporterType.Bump) {
-				importer.textureType = TextureImporterType.Bump;
+			if (importer.textureType != TextureImporterType.NormalMap) {
+				importer.textureType = TextureImporterType.NormalMap;
 				AssetDatabase.ImportAsset (schematic.structure_and_physics.material_structure.detail_normal);
 				AssetDatabase.Refresh ();
 			}

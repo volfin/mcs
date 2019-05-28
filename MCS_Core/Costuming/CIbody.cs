@@ -17,7 +17,11 @@ namespace MCS.COSTUMING
 		/// </summary>
 		public Texture2D backupTexture;
 
+        public Material bodyMat;
 
+        public Material headMat;
+
+        public Material eyeMat;
 
 		/// <summary>
 		/// Adds a given CoreMesh reference to the interal LOD list.
@@ -35,52 +39,41 @@ namespace MCS.COSTUMING
         /// </summary>
         public Material GetActiveMaterialInSlot(MATERIAL_SLOT querySlot)
         {
-            SkinnedMeshRenderer smr = GetSkinnedMeshRenderer();
-            /*
-            //this causes a problem at runtime where all the mats are wrong
-            Material[] materials;
-            if (Application.isPlaying)
-            {
-                materials = smr.materials;
-            } else
-            {
-                materials = smr.sharedMaterials;
-            }
-            */
-            Material[] materials = smr.sharedMaterials;
+            Material[] sharedMaterials = base.GetSkinnedMeshRenderer().sharedMaterials;
 
-            for(int i = 0; i < materials.Length; i++)
+            for (int i = 0; i < sharedMaterials.Length; i++)
             {
-                if(materials[i] == null)
+                if (sharedMaterials[i] != null)
                 {
-                    continue;
-                }
-                string name = materials[i].name.ToLower();
-                MATERIAL_SLOT slot = MATERIAL_SLOT.UNKNOWN;
+                    string name = sharedMaterials[i].name.ToLower();
 
-                if (name.Contains("head"))
-                {
-                    slot = MATERIAL_SLOT.HEAD;
-                } else if (name.Contains("body"))
-                {
-                    slot = MATERIAL_SLOT.BODY;
-                } else if (name.Contains("genesis2"))
-                {
-                    slot = MATERIAL_SLOT.BODY;
-                } else if (name.Contains("eyeandlash")){
-                    slot = MATERIAL_SLOT.EYEANDLASH;
-                }
+                    MATERIAL_SLOT slot = MATERIAL_SLOT.UNKNOWN;
 
-                if (querySlot.Equals(slot))
-                {
-                    return materials[i];
+                    if (name.Contains("head"))
+                    {
+                        slot = MATERIAL_SLOT.HEAD;
+                    }
+                    else if (name.Contains("body"))
+                    {
+                        slot = MATERIAL_SLOT.BODY;
+                    }
+                    else if (name.Contains("genesis2"))
+                    {
+                        slot = MATERIAL_SLOT.BODY;
+                    }
+                    else if (name.Contains("eyeandlash"))
+                    {
+                        slot = MATERIAL_SLOT.EYEANDLASH;
+                    }
+
+                    if (querySlot.Equals(slot))
+                    {
+                        return sharedMaterials[i];
+                    }
                 }
             }
 
             return null;
         }
-
-
-
 	}
 }
