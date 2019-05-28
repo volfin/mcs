@@ -1300,13 +1300,12 @@ namespace MCS.SERVICES
         }
         protected IEnumerator Fetch(string key, string srcURL)//, OnPostFetch callback)
         {
-            UnityEngine.Debug.Log("srcURL: " + srcURL);
-            WWW www = new WWW(srcURL);
-            yield return www;
+            UnityWebRequest uwr = UnityWebRequest.Get(srcURL);
+            yield return uwr.SendWebRequest();
 
-            UnityEngine.Debug.Log("www: " + www.responseHeaders);
+            UnityEngine.Debug.Log("www: " + uwr.GetResponseHeaders());
 
-            results[key] = www.bytes;
+            results[key] = uwr.downloadHandler.data;
             //callback(key);
         }
 
