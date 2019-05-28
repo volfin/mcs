@@ -697,9 +697,9 @@ namespace MCS.COSTUMING
             isBoundsDirty = true;
         }
 
-#if UNITY_TARGET_GTE_5_5
+
         private Dictionary<int, List<Vector3>> _smrVertices = new Dictionary<int, List<Vector3>>();
-#endif
+
 
         /// <summary>
         /// Recalculates the boundary of the mesh based on current blends/jct/animation
@@ -763,9 +763,8 @@ namespace MCS.COSTUMING
                 float maxZ = -1f * Mathf.Infinity;
 
 
-                //TODO: if we are using unity 5.5 we can use mesh.GetVertices(List<Vector3> verts) instead which won't allocate
-                //NOTE: this directive does NOT exist yet, this will never compile as we haven't coded it in yet
-#if UNITY_TARGET_GTE_5_5
+                //NOTE: if we are using unity 5.5 we can use mesh.GetVertices(List<Vector3> verts) instead which won't allocate
+
                 List<Vector3> verts = null;
                 int id = smr.GetInstanceID();
                 if(!_smrVertices.TryGetValue(id, out verts)){
@@ -774,11 +773,8 @@ namespace MCS.COSTUMING
                 }
                 mesh.GetVertices(verts);
                 int length = verts.Count;
-#else
-                //For legacy unity (below 5.5) we'll get a copy of verts (a new allocation) this causes noticable GC
-                Vector3[] verts = mesh.vertices;
-                int length = verts.Length;
-#endif
+
+
                 for (int i = 0; i < length; i++)
                 {
                     Vector3 v = verts[i] + offset;
