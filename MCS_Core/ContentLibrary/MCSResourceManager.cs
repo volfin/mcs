@@ -109,20 +109,33 @@ namespace MCS.CONTENTLIBRARY
             */
 
 			foreach (KeyValuePair<string, string> entry in texturePaths) {
-				using (WWW www = new WWW(entry.Value)) {
+				
+                using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(entry.Value))
+                {
+                    //yield return 
+                    uwr.SendWebRequest();
 
-					while (!www.isDone) {
-						loader.progress += www.progress * 100 / texturePaths.Count;
-						yield return 0;
-					}
+                    while (!uwr.isDone)
+                    {
+                        loader.progress += uwr.downloadProgress * 100 / texturePaths.Count;
+                        yield return 0;
+                    }
 
-					if (www.error != null)
-						throw new Exception ("Download of " + entry.Key + "from: " + entry.Value + "  has failed. Error: " + www.error);
-					Texture2D streamedTexture = www.texture;
-					if (streamedTexture != null) {
-						textures.Add (entry.Key, streamedTexture);
-					}
-				}
+                    if (uwr.isNetworkError || uwr.isHttpError)
+                    {
+                        throw new Exception("Download of " + entry.Key + "from: " + entry.Value + "  has failed. Error: " + uwr.error);
+                    }
+                    else
+                    {
+                        // Get downloaded asset bundle
+                        Texture2D streamedTexture = DownloadHandlerTexture.GetContent(uwr);
+                        if (streamedTexture != null)
+                        {
+                            textures.Add(entry.Key, streamedTexture);
+                        }
+
+                    }
+                }
 			}
 			AssetCreator ac = new AssetCreator ();
 			float difference = (float) System.DateTime.Now.Subtract (datetime).TotalMilliseconds;
@@ -138,21 +151,31 @@ namespace MCS.CONTENTLIBRARY
 				yield return null;
             */
 
-			using (WWW www = WWW.LoadFromCacheOrDownload (schematic.stream_and_path.url, Convert.ToInt32 (schematic.version_and_control.item_version))) {
+            using (UnityWebRequest uwr = UnityWebRequestAssetBundle.GetAssetBundle(schematic.stream_and_path.url, Convert.ToUInt32(schematic.version_and_control.item_version),0))
+            {
+                //yield return 
+                uwr.SendWebRequest();
 
-				while (!www.isDone) {
-					loader.progress = www.progress * 100;
-					yield return 0;
-				}
+                while (!uwr.isDone)
+                {
+                    loader.progress = uwr.downloadProgress * 100;
+                    yield return 0;
+                }
 
-				if (www.error != null)
-					throw new Exception ("Download of " + schematic.origin_and_description.mcs_id + "  has failed. Error: " + www.error);
-				AssetBundle bundle = www.assetBundle;
-				float difference = (float) System.DateTime.Now.Subtract (datetime).TotalMilliseconds;
-				loader.Complete (bundle.LoadAsset (schematic.origin_and_description.name),difference);
+                if (uwr.isNetworkError || uwr.isHttpError)
+                {
+                    throw new Exception("Download of " + schematic.origin_and_description.mcs_id + "  has failed. Error: " + uwr.error);
+                }
+                else
+                {
+                    // Get downloaded asset bundle
+                    AssetBundle bundle = DownloadHandlerAssetBundle.GetContent(uwr);
+                    float difference = (float)System.DateTime.Now.Subtract(datetime).TotalMilliseconds;
+                    loader.Complete(bundle.LoadAsset(schematic.origin_and_description.name), difference);
 
-				bundle.Unload (false);
-			}
+                    bundle.Unload(false);
+                }
+            }
 		}
 
 		public MCSObjectLoader LoadFromUrl(AssetSchematic data){
